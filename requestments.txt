@@ -1,0 +1,4 @@
+mutagen==1.40.0
+pycryptodome==3.6.1
+requests==2.18.4
+tqdm==4.23.3
