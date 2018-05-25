@@ -196,7 +196,7 @@ class neteaseMusic(object):
         song_info['track'] = str(i['no']) #歌曲在专辑里的序号 
         
         al,ar,h,m,publishTime='al','ar','h','m',i.get('publishTime')
-        if not i.get('publishTime'):
+        if not 'publishTime' in i:
             al,ar,h,m,publishTime='album','artists','hMusic','mMusic',i['album']['publishTime']
             
         song_info['mp3_quality'] =h in i and 'h' or m in i and 'm' or 'l'
