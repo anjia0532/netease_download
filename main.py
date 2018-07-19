@@ -202,13 +202,12 @@ class neteaseMusic(object):
         t = time.gmtime(int(publishTime<0 and 946656000000 or publishTime)*0.001)
         song_info['year'] = '-'.join([str(t.tm_year), str(t.tm_mon), str(t.tm_mday)])
         song_info['song_name'] = modificate_text(i['name']).strip()
-        song_info['artist_name'] = modificate_text(i[ar][0]['name'])
+        song_info['artist_name'] = modificate_text(' & '.join(str(ar['name']) for ar in i[ar]))
         song_info['album_pic_url'] = i[al]['picUrl']
         song_info['cd_serial'] = '1'
         song_info['album_name'] = modificate_text(i[al]['name'])
 
-        file_name = song_info[ 'track'] \
-            + '.' + song_info['song_name'] \
+        file_name = song_info['song_name'] \
             + ' - ' + song_info['artist_name'] \
             + '.mp3'
         song_info['file_name'] = file_name
