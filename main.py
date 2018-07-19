@@ -115,7 +115,7 @@ class neteaseMusic(object):
         self.ep = encrypyed()
         self.timeout = 60
 
-    
+
     def id_parser(self,key):
         '''
         获取所需id
@@ -124,7 +124,7 @@ class neteaseMusic(object):
         :return 所需id
         '''
         return re.search(r'%s.+?(\d+)'%key, args.url).group(1)
-    
+
     def post_request(self, uri, params):
         '''
         调用网易api
@@ -149,7 +149,7 @@ class neteaseMusic(object):
         params = {'ids': list(s["id"] for s in songs), 'br': '320000', 'csrf_token': ''}
         result = self.post_request(apis['song_url'], params)
         return dict([str(s["id"]),s["url"]] for s in result['data'] if result['code'] == 200)
-    
+
 
     def modified_id3(self, file_name, info):
         '''
@@ -158,10 +158,10 @@ class neteaseMusic(object):
         :info 歌曲信息
         :return None
         '''
-        
+
         if not os.path.exists(file_name):
             return None
-        
+
         id3 = ID3()
         id3.add(TRCK(encoding=3, text=info['track']))
         id3.add(TDRC(encoding=3, text=info['year']))
@@ -171,7 +171,7 @@ class neteaseMusic(object):
         id3.add(TPOS(encoding=3, text=info['cd_serial']))
         id3.add(COMM(encoding=3, desc=u'Comment', text=info['song_url']))
         id3.save(file_name)
-        
+
     def get_song_infos(self, songs):
         '''
         获取歌曲列表中歌曲信息
@@ -183,7 +183,7 @@ class neteaseMusic(object):
             song_info = self.get_song_info(i)
             song_info['durl']=urls.get(str(i['id'])) #歌曲地址
             self.song_infos.append(song_info)
-        
+
     def get_song_info(self, i):
         '''
         解析歌曲信息
@@ -193,28 +193,27 @@ class neteaseMusic(object):
         song_info = {}
         song_info['song_id'] = i['id']
         song_info['song_url'] = u'http://music.163.com/song/%s'% i['id']
-        song_info['track'] = str(i['no']) #歌曲在专辑里的序号 
-        
+        song_info['track'] = str(i['no']) #歌曲在专辑里的序号
+
         al,ar,h,m,publishTime='al','ar','h','m',i.get('publishTime')
         if not 'publishTime' in i:
             al,ar,h,m,publishTime='album','artists','hMusic','mMusic',i['album']['publishTime']
-            
         song_info['mp3_quality'] =h in i and 'h' or m in i and 'm' or 'l'
-        t = time.gmtime(int(publishTime)*0.001)
+        t = time.gmtime(int(publishTime<0 and 946656000000 or publishTime)*0.001)
         song_info['year'] = '-'.join([str(t.tm_year), str(t.tm_mon), str(t.tm_mday)])
         song_info['song_name'] = modificate_text(i['name']).strip()
         song_info['artist_name'] = modificate_text(i[ar][0]['name'])
         song_info['album_pic_url'] = i[al]['picUrl']
         song_info['cd_serial'] = '1'
         song_info['album_name'] = modificate_text(i[al]['name'])
-        
+
         file_name = song_info[ 'track'] \
             + '.' + song_info['song_name'] \
             + ' - ' + song_info['artist_name'] \
             + '.mp3'
         song_info['file_name'] = file_name
         return song_info
-    
+
     def download_song(self,song_id):
         '''
         解析单曲
@@ -225,7 +224,7 @@ class neteaseMusic(object):
         result = self.post_request(apis['song_detail'],params)
         self.get_song_infos(result['songs'])
         print(s % (2, 97, u'\n  >>  1首歌曲将要下载.'))
-        
+
     def download_playlist(self,playlist_id):
         '''
         解析歌单
@@ -239,10 +238,10 @@ class neteaseMusic(object):
             + result['result']['creator']['nickname'])
         self.dir_ = os.path.join(os.getcwd(), modificate_file_name_for_wget(d))
         self.amount_songs = str(len(songs))
-        print(s % (2, 97, u'\n  >> ' + self.amount_songs + u' 首歌曲将要下载.')) 
+        print(s % (2, 97, u'\n  >> ' + self.amount_songs + u' 首歌曲将要下载.'))
         self.get_song_infos(songs)
-            
-        
+
+
     def download_album(self,album_id):
         '''
         解析专辑
@@ -256,14 +255,14 @@ class neteaseMusic(object):
             + ' - ' + result['album']['artist']['name'])
         self.dir_ = os.path.join(os.getcwd(), modificate_file_name_for_wget(d))
         self.amount_songs = str(len(songs))
-        
+
         print(s % (2, 97, u'\n  >> ' + self.amount_songs + u' 首歌曲将要下载.'))
-        
+
         for i in songs:
             i['publishTime']=result['album']['publishTime']
         self.get_song_infos(songs)
-            
-        
+
+
     def download_artist_albums(self,artist_id):
         '''
         解析艺术家所有专辑
@@ -277,7 +276,7 @@ class neteaseMusic(object):
             offset+=30
         for i in album_ids:
             self.download_album(i)
-            
+
     def get_artist_albums(self,artist_id,offset=0,limit=30):
         '''
         分页艺术家专辑
@@ -288,7 +287,7 @@ class neteaseMusic(object):
         params={'offset':offset,'total':True,'limit':limit,'csrf_token':''}
         result = self.post_request(apis['artist_album']%artist_id,params)
         return list(al['id'] for al in result['hotAlbums'] if result['code']==200),result['artist']['albumSize']
-        
+
     def download_artist_songs(self,artist_id):
         '''
         艺术家top 50单曲
@@ -301,11 +300,11 @@ class neteaseMusic(object):
         d = modificate_text(result['artist']['name'] + ' - ' + 'Top 50')
         self.dir_ = os.path.join(os.getcwd(), modificate_file_name_for_wget(d))
         amount_songs = str(len(songs))
-        print(s % (2, 97, u'\n  >> ' + amount_songs + u' 首歌曲将要下载.')) 
+        print(s % (2, 97, u'\n  >> ' + amount_songs + u' 首歌曲将要下载.'))
         for i in songs:
             i['publishTime']=result['artist']['publishTime']
         self.get_song_infos(songs)
-        
+
     def download_djradio(self,djradio_id):
         '''
         电台节目
@@ -313,14 +312,14 @@ class neteaseMusic(object):
         :return 电台节目信息
         '''
         radio_ids,offset,total=[],0,30
-        
+
         while len(radio_ids)<total:
             ids,total = self.get_djradios(djradio_id,offset,30)
             radio_ids.extend(ids)
             offset+=30
         for i in radio_ids:
             self.download_song(i)
-        
+
     def get_djradios(self,djradio_id,offset=0,limit=30):
         '''
         分页电台节目
@@ -331,7 +330,7 @@ class neteaseMusic(object):
         params={'radioId':djradio_id,'csrf_token':'','limit':limit,'offset':offset}
         result = self.post_request(apis['djradio'],params)
         return list(r['mainSong']['id'] for r in result['programs'] if result['code']==200),result['count']
-        
+
     def download_dj(self,dj_id):
         '''
         解析dj
@@ -341,7 +340,7 @@ class neteaseMusic(object):
         params={'id':dj_id,'csrf_token':''}
         result = self.post_request(apis['dj'],params)
         self.download_song(result['program']['mainSong']['id'])
-        
+
     def download(self, amount_songs=None, n=None):
         '''
         下载歌曲
@@ -349,7 +348,7 @@ class neteaseMusic(object):
         :n 下第几首
         '''
         amount_songs=amount_songs or len(self.song_infos)
-        
+
         dir_ = self.dir_
         if not os.path.exists(dir_):
             os.mkdir(dir_)
@@ -361,24 +360,26 @@ class neteaseMusic(object):
             t = modificate_file_name_for_wget(i['file_name'])
             file_name = os.path.join(dir_, t)
             if os.path.exists(file_name) or not i['durl']:  # if file exists, no get_durl
+                if not i['durl']:
+                    print("暂无版权")
                 if args.undownload:
-                    self.modified_id3(file_name, i)                    
+                    self.modified_id3(file_name, i)
                 ii += 1
                 continue
-                
+
             if not args.undownload:
                 q = {'h': 'High', 'm': 'Middle', 'l': 'Low'}
                 mp3_quality = str(q.get(i['mp3_quality']))
-                
+
                 print(u'\n  ++ 正在下载: #%s/%s# %s\n  ++ mp3_quality: %s' \
                     % (n or ii, amount_songs, col,s % (1, 91, mp3_quality)))
 
                 file_name_for_wget = file_name.replace('`', '\`')
-                
-                r = requests.session().get(i['durl'], stream=True,headers=download_headers,timeout=self.timeout) 
-                
+
+                r = requests.session().get(i['durl'], stream=True,headers=download_headers,timeout=self.timeout)
+
                 length = int(r.headers.get('content-length'))
-                    
+
                 with open(file_name_for_wget, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=1024):
                         if chunk:
@@ -401,7 +402,7 @@ class neteaseMusic(object):
             print(s % (2, 92, u'\n  -- 正在分析专辑信息 ...'))
             self.download_album(self.id_parser('album'))
         elif 'artist' in url:
-            artist_id = self.id_parser('artist') 
+            artist_id = self.id_parser('artist')
             code = input('\n  >> 输入 a 下载该艺术家所有专辑.\n' \
                 '  >> 输入 t 下载该艺术家 Top 50 歌曲.\n  >> ')
             if code == 'a':
@@ -434,7 +435,7 @@ def main(url):
 if __name__ == '__main__':
     p = argparse.ArgumentParser(
         description='downloading any music.163.com')
-    
+
     p.add_argument('url', help='any url of music.163.com')
     p.add_argument('-d','--dir', help='save files to this dir')
     p.add_argument('-c', '--undownload', action='store_true', \
