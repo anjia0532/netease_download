@@ -10,6 +10,11 @@ netease_download -- 一款简单且极少依赖的网易云音乐下载器，支
 
 需要python3
 
+**注意：**
+1. 如果是windows的cmd/powershell,默认字符集是GBK，部分歌名会报错，所以需要运行 `CHCP 65001`。
+2. 部分歌曲下架后，下载时会提示，暂无版权。
+
+
 ```bash
 git clone https://github.com/anjia0532/netease_download.git
 cd netease_download
