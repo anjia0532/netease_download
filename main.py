@@ -54,7 +54,8 @@ s = u'\x1b[%d;%dm%s\x1b[0m'       # terminual color template
 
 # 去除非法字符
 def modificate_text(text):
-    text = html.unescape(text)
+    text = text or ''
+    text = html.unescape(text or '')
     text = re.sub(r'//*', '-', text)
     text = text.replace('/', '-')
     text = text.replace('\\', '-')
@@ -436,7 +437,7 @@ if __name__ == '__main__':
         description='downloading any music.163.com')
 
     p.add_argument('url', help='any url of music.163.com')
-    p.add_argument('-d','--dir', help='save files to this dir')
+    p.add_argument('-d','--dir', help='save files to this dir',default="mp3")
     p.add_argument('-c', '--undownload', action='store_true', \
         help='no download, using to renew id3 tags')
 #     args = p.parse_args(args=["http://music.163.com/#/song?id=27836179"])
