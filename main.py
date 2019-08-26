@@ -54,7 +54,6 @@ s = u'\x1b[%d;%dm%s\x1b[0m'       # terminual color template
 
 # 去除非法字符
 def modificate_text(text):
-    text = text or ''
     text = html.unescape(text or '')
     text = re.sub(r'//*', '-', text)
     text = text.replace('/', '-')
