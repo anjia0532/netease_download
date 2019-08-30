@@ -213,7 +213,7 @@ class neteaseMusic(object):
         song_info['file_name'] = file_name
         return song_info
 
-    def download_song(self,song_id):
+    def download_song(self,song_id,name=""):
         '''
         解析单曲
         :song_id 歌曲id
@@ -221,7 +221,9 @@ class neteaseMusic(object):
         '''
         params={'c':str([{'id':song_id}]),'ids':[song_id],'csrf_token':''}
         result = self.post_request(apis['song_detail'],params)
-        self.get_song_infos(result['songs'])
+        song=result['songs'] and result['songs'][0]
+        song["name"]=song["name"] or name
+        self.get_song_infos([song])
         print(s % (2, 97, u'\n  >>  1首歌曲将要下载.'))
 
     def download_playlist(self,playlist_id):
@@ -317,7 +319,7 @@ class neteaseMusic(object):
             radio_ids.extend(ids)
             offset+=30
         for i in radio_ids:
-            self.download_song(i)
+            self.download_song(i["id"],i["name"])
 
     def get_djradios(self,djradio_id,offset=0,limit=30):
         '''
@@ -328,7 +330,7 @@ class neteaseMusic(object):
         '''
         params={'radioId':djradio_id,'csrf_token':'','limit':limit,'offset':offset}
         result = self.post_request(apis['djradio'],params)
-        return list(r['mainSong']['id'] for r in result['programs'] if result['code']==200),result['count']
+        return list({"id":r['mainSong']['id'], "name":r['mainSong']['name']} for r in result['programs'] if result['code']==200),result['count']
 
     def download_dj(self,dj_id):
         '''
@@ -338,7 +340,7 @@ class neteaseMusic(object):
         '''
         params={'id':dj_id,'csrf_token':''}
         result = self.post_request(apis['dj'],params)
-        self.download_song(result['program']['mainSong']['id'])
+        self.download_song(result['program']['mainSong']['id'],result['program']['mainSong']['name'])
 
     def download(self, amount_songs=None, n=None):
         '''
